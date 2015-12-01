@@ -5,38 +5,28 @@ import collections
 import pprint
 import math
 import matplotlib.pyplot as plt
-
-
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
-import matplotlib.pyplot as plt
 import numpy as np
 
 # *** SETTINGS ***
-NUMBER_OF_RACES = 6		# number of races that make up one competition
-NUMBER_OF_BOATS = 100	# number of boats participating in competition
-# I assume that mean skill is in a range 0..100. However foward assuptions can be made, 
-# let say that you can make it to olypics only if your mean skill is greater than 75.
-# However for the purpose of invesitgation it's better to assume this rage.
-MEAN_SKILL_MAX = 100
-MEAN_SKILL_MIN = 70
-# It' wise to choose standart deviation to be between 0 and MEAN_SKILL_MAX/3 since we that really want standard deviation to be much bigger than mean skill
-
-STANDARD_DEVIATION_MAX = 10
-STANDARD_DEVIATION_MIN = 0
-SEED = 0 # 57
+SEED = 57 # 57 as default, change to 0 if not needed
 
 if SEED:
 	random.seed(SEED)
 
-def generate_database():
+
+def generate_database(mean_skill_range, standard_deviaiton_range, number_of_boats = 100):
+	mean_skill_min, mean_skill_max = mean_skill_range
+	standard_deviation_min, standard_deviation_max = standard_deviaiton_range
+
 	with open('database.csv', 'w') as csvfile:
 		csv_writer = csv.writer(csvfile)
 
-		for i in range(NUMBER_OF_BOATS):
-			mean_performance = random.randint(MEAN_SKILL_MIN, MEAN_SKILL_MAX)
-			standard_deviation = random.randint(STANDARD_DEVIATION_MIN, STANDARD_DEVIATION_MAX)
+		for i in range(number_of_boats):
+			mean_performance = random.randint(mean_skill_min, mean_skill_max)
+			standard_deviation = random.randint(standard_deviation_min, standard_deviation_max)
 			csv_writer.writerow([i+1, mean_performance, standard_deviation])
 
 
@@ -67,9 +57,6 @@ def read_database(file_name = "file.csv"):
 	Eva, 90, 5,
 	where each record specifies their name, mean performance and standart deviation.
 	This function reads in csv file of this format and returns OrderedDict with names as keys whose values are performance and standard deviation pairs.
-
-	>>> read_database()
-	OrderedDict([('Alice', (100.0, 0.0)), ('Bob', (100.0, 5.0)), ('Clare', (100.0, 10.0)), ('Dennis', (90.0, 0.0)), ('Eva', (90.0, 5.0))])
 	"""
 	d = collections.OrderedDict()
 	with open(file_name) as csvfile:
@@ -91,9 +78,6 @@ def simulate_performance(data_base):
 	This function takes an OrderedDict of the format returned by your answer to 1c as an argument,
 	generates a random performance value using the normal distribution for each sailor,
 	and returns these in another OrderedDict with names as keys.
-
-	>>> normal_distribution(collections.OrderedDict([('Alice', (100.0, 0.0)), ('Bob', (100.0, 5.0)), ('Clare', (100.0, 10.0)), ('Dennis', (90.0, 0.0)), ('Eva', (90.0, 5.0))]))
-	OrderedDict([('Alice', 100.0), ('Bob', 105.76045089520113), ('Clare', 108.36452152548142), ('Dennis', 90.0), ('Eva', 96.10844089749128)])
 	"""
 	sailors_performances = collections.OrderedDict()
 	# initialisation of OrderedDict
@@ -109,24 +93,20 @@ def simulate_race(simulation):
 	"""
 	This function takes an OrderedDict of the format returned by your answer to 1d as an argument,
 	and returns a list of each sailor’s position in the race.
-	
-	>>> position(collections.OrderedDict([('Alice', 100.0), ('Bob', 105.76045089520113), ('Clare', 108.36452152548142), ('Dennis', 90.0), ('Eva', 96.10844089749128)]))
-	['Clare', 'Bob', 'Alice', 'Eva', 'Dennis']
 	"""
 	return [x[0] for x in sorted(simulation.items(), key=lambda sailor: -sailor[1])]
 
 
-def main():
+def simulation(mean_skill_range, standard_deviaiton_range, number_of_races = 6, number_of_boats = 100):
 	"""
 	Create an OrderedDict named results with names as the keys, and empty lists as the values.
 	Using the functions above, run 6 races, appending the positions of each sailor to the corresponding list,
 	calculate their series score and output their names in order.
 	"""
-
 	results_I = collections.OrderedDict()
 	results_II = collections.OrderedDict()
 
-	generate_database()
+	generate_database(mean_skill_range, standard_deviaiton_range)
 
 	db = read_database('database.csv')
 	number_of_boats = len(db)
@@ -134,10 +114,9 @@ def main():
 		results_I[name] = []
 		results_II[name] = []
 
-
-	for i in range(NUMBER_OF_RACES):
-		simulation = simulate_performance(db)
-		position = simulate_race(simulation)
+	for i in range(number_of_races):
+		simulated_performance = simulate_performance(db)
+		position = simulate_race(simulated_performance)
 
 		for position_in_the_race, name in enumerate(position, start = 1):
 			results_I[name].append(-position_in_the_race) # I scoring stystem can be seen as assigning minus points to the sailors
@@ -147,88 +126,84 @@ def main():
 	results_I = list(results_I.items()) # converts OrderedDict to the list
 	results_II = list(results_II.items()) # converts OrderedDict to the list
 
-
-
+	# 2D figure: initialisation
 	plt.figure(1)
+
+	# 3D figure: initialisation
 	fig = plt.figure(2)
 	ax = fig.gca(projection='3d')
-	print("*** SORTED SCORES: SYSTEM I ***")
-	
+
+
+	# *** SORTED SCORES: SYSTEM I ***
 	for idx, sailor in enumerate(sorted_scores(results_I), start=1):
 		name = sailor[0]
 		scores = sailor[1]
 		performance = total_score(sailor)
 		mean_skill = db[name][0]
 		standard_deviation = db[name][1]
-		print("{:>2} {:>10} {:>10} {:>10} {:>20}".format(idx, name, mean_skill, standard_deviation, performance))
 		
-		ax.scatter(mean_skill, standard_deviation, idx, 'bo')
-
+		# 2D figure: plot
 		plt.figure(1)
 		plt.subplot(211)
-		plt.plot(idx, mean_skill, 'go', label='SYSTEM I')
+		plt.plot(idx, mean_skill, 'go')
 		plt.subplot(212)
-		plt.plot(idx, standard_deviation, 'go', label='SYSTEM I')
-		# print(scores)
+		plt.plot(idx, standard_deviation, 'go')
 
+		# 3D figure: plot
+		ax.scatter(mean_skill, standard_deviation, idx, c='g')
 
+		# print("{:>2} {:>10} {:>10} {:>10} {:>20}".format(idx, name, mean_skill, standard_deviation, performance))
 
-
-
-	print("THE ORDER I: ")
-	print([x[0] for x in sorted_scores(results_I)])
-
-	print()
-	print()
-
-	print("*** SORTED SCORES: SYSTEM II ***")
-
+	
+	# *** SORTED SCORES: SYSTEM II ***")
 	for idx, sailor in enumerate(sorted_scores(results_II), start=1):
 		name = sailor[0]
 		scores = sailor[1]
 		performance = total_score(sailor)
 		mean_skill = db[name][0]
 		standard_deviation = db[name][1]
-		print("{:>2} {:>10} {:>10} {:>10} {:>20}".format(idx, name, mean_skill, standard_deviation, performance))
-
-		ax.scatter(mean_skill, standard_deviation, idx, c='r')
 		
+		# 2D figure: plot
+		plt.figure(1)
 		plt.subplot(211)
-		plt.plot(idx, mean_skill, 'ro', label='SYSTEM I')
+		plt.plot(idx, mean_skill, 'ro')
 		plt.subplot(212)
-		plt.plot(idx, standard_deviation, 'ro', label='SYSTEM I')
-		# print(scores)
+		plt.plot(idx, standard_deviation, 'ro')
+
+		# 3D figure: plot
+		ax.scatter(mean_skill, standard_deviation, idx, c='r')
+
+		# print("{:>2} {:>10} {:>10} {:>10} {:>20}".format(idx, name, mean_skill, standard_deviation, performance))
+
+	# 2D figure: labels
 	plt.subplot(211)
 	plt.title("Sailor's Mean Skill Impact on Score")
 	plt.xlabel("sailor's position")
 	plt.ylabel("sailor's mean skill")
+
+	# 2D figure: legend
+	go = plt.Line2D([0,0],[0,1], color='Green', marker='o', linestyle='')
+	ro = plt.Line2D([0,0],[0,1], color='Red', marker='o', linestyle='')
+	plt.legend([go,ro], ["System I", "System II"])
+
 	plt.subplot(212)
 	plt.title("Sailor's Standard Deviation Impact on Score")
 	plt.xlabel("sailor's position")
 	plt.ylabel("sailor's standard deviation")
 
-
-	print("THE ORDER II: ")
-	print([x[0] for x in sorted_scores(results_II)])
-
-
-	print("1) Is the final order the same?")
-
-
-	# mean_plot.ylabel('mean skill')
-	#mean_plot.xlabel('position')
-
-	# consistency_plot.ylabel("standard deviation")
-	#consistency_plot.xlabel("position")
-
-	
-
-
+	# 3D figure: labels
 	ax.set_xlabel("Mean Skill")
 	ax.set_ylabel('Standard Deviation')
 	ax.set_zlabel('Position')
 
 	plt.show()
+
+
+def main():
+	# supplying variables by names makes calling function more readable
+	simulation(mean_skill_range = (0,100), standard_deviaiton_range = (0,20))
+	simulation(mean_skill_range = (70,100), standard_deviaiton_range = (0,10))
+
 
 
 if __name__ == '__main__': main()

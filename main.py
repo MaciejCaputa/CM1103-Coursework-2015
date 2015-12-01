@@ -42,8 +42,6 @@ def sorted_scores(scores):
 	>>> sorted_scores([("Alice", [1, 2, 1, 1, 1, 1]), ("Bob", [3, 1, 5, 3, 2, 5]), ("Clare", [2, 3, 2, 2, 4, 2]), ("Dennis", [5, 4, 4, 4, 3, 4]), ("Eva", [4, 5, 3, 5, 5, 3])])
 	[('Alice', [1, 2, 1, 1, 1, 1]), ('Clare', [2, 3, 2, 2, 4, 2]), ('Bob', [3, 1, 5, 3, 2, 5]), ('Dennis', [5, 4, 4, 4, 3, 4]), ('Eva', [4, 5, 3, 5, 5, 3])]
 	"""
-	# !!!!!!
-	# unprecised, sorted by what? by sum of every score, by some of the best 5 score?
 	return sorted(scores, key=lambda sailor: (total_score(sailor), sailor[1][0]))
 
 
@@ -77,7 +75,7 @@ def read_database(file_name = "file.csv"):
 	return d
 
 
-def normal_distribution(sailors_performances):
+def simulate_performance(data_base):
 	"""
 	This function takes an OrderedDict of the format returned by your answer to 1c as an argument,
 	generates a random performance value using the normal distribution for each sailor,
@@ -86,13 +84,14 @@ def normal_distribution(sailors_performances):
 	>>> normal_distribution(collections.OrderedDict([('Alice', (100.0, 0.0)), ('Bob', (100.0, 5.0)), ('Clare', (100.0, 10.0)), ('Dennis', (90.0, 0.0)), ('Eva', (90.0, 5.0))]))
 	OrderedDict([('Alice', 100.0), ('Bob', 105.76045089520113), ('Clare', 108.36452152548142), ('Dennis', 90.0), ('Eva', 96.10844089749128)])
 	"""
-	d = collections.OrderedDict() # initialisation of OrderedDict
+	sailors_performances = collections.OrderedDict()
+	# initialisation of OrderedDict
 	# mean performance µ and standard deviation σ.
-	for key, values in sailors_performances.items():
+	for key, values in data_base.items():
 		mean_performance, standard_deviation = values
-		d[key] = random.normalvariate(mean_performance, standard_deviation) # mu - mean, sigma - standard deviation
+		sailors_performances[key] = random.normalvariate(mean_performance, standard_deviation) # mu - mean, sigma - standard deviation
 
-	return d
+	return sailors_performances
 	
 
 def position(simulation):
@@ -115,25 +114,32 @@ def main():
 	results = collections.OrderedDict()
 
 	db = read_database()
+	print(db)
 	for name in db.keys():
 		results[name] = []
 
 
 	for i in range(NUMBER_OF_RACES):
-		nd = normal_distribution(db)
+		simulation = simulate_performance(db)
+		pos = position(simulation)
 
-		for score, name in enumerate(position(nd),start = 1):
+		for score, name in enumerate(pos,start = 1):
 			results[name].append(score)
 		
 
 	print(results)
 	results = list(results.items()) # converts OrderedDict to the list
+	print(results)
+	print()
+	print("SORTED SCORES")
+	print(sorted_scores(results))
+	for idx, sailor in enumerate(sorted_scores(results), start=1):
+		print("{:>2} {:>10} {:>10}".format(idx, sailor[0], total_score(sailor)))
+	ss = sorted_scores(results)
 
 	print("\n\n*** PLACINGS ***")
 	print(results)
-
-	print("\n\n*** SORTED PLACINGS ***")
-	print(sorted_scores(results))
+	return results
 
 	print("\n\n*** THE ORDER ***")
 	print([x[0] for x in sorted_scores(results)])

@@ -1,6 +1,12 @@
 name, mean performance, std dev
+Adam, 70, 30,
 Alice, 100, 0,
 Bob, 100, 5,
 Clare, 100, 10,
 Dennis, 90, 0,
-Eva, 90, 5,
+Eva, 90, 5,
+Jake, 40, 60,
+Zenon, 100, 5,
+Jake, 100, 10,
+1, 50, 80,
+2, 90, 75,

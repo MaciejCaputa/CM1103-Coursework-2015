@@ -1,22 +1,21 @@
 # *** MACIEJ CAPUTA ***
+# Relavant *doctests* were provided.
 import csv
 import random
 import collections
-import pprint
-
 
 # *** SETTINGS ***
-NUMBER_OF_RACES = 6
-SEED = 57
+NUMBER_OF_RACES = 6 # default number of races
+SEED = 57 # 57 as default, change to 0 if not needed
 
 if SEED:
 	random.seed(SEED)
 
 
 def total_score(sailor):
-	"""
-	Function takes a tuple containing name of sailor and a list of his/her finishing position.
-	First the word position is discarted and then the sum of remainter is taken and returned.
+	"""(a)
+	This function takes a sailor’s results as an argument, discards their worst finishing position 
+	and returns the sum of the remainder as their score for the series.
 
 	>>> total_score(("bob", [2,4,1,1,2,5]))
 	10
@@ -36,8 +35,9 @@ def total_score(sailor):
 
 
 def sorted_scores(scores):
-	"""
-	Function takes a list of scores and return a copy of this list sordet in ascending order of their series score.
+	"""(b)
+	This function should return a copy of the list sorted in ascending order of their series score (break
+	ties using their position in the first race).
 
 	>>> sorted_scores([("Alice", [1, 2, 1, 1, 1, 1]), ("Bob", [3, 1, 5, 3, 2, 5]), ("Clare", [2, 3, 2, 2, 4, 2]), ("Dennis", [5, 4, 4, 4, 3, 4]), ("Eva", [4, 5, 3, 5, 5, 3])])
 	[('Alice', [1, 2, 1, 1, 1, 1]), ('Clare', [2, 3, 2, 2, 4, 2]), ('Bob', [3, 1, 5, 3, 2, 5]), ('Dennis', [5, 4, 4, 4, 3, 4]), ('Eva', [4, 5, 3, 5, 5, 3])]
@@ -46,7 +46,7 @@ def sorted_scores(scores):
 
 
 def read_database(file_name = "file.csv"):
-	"""
+	"""(c)
 	Assuming that sailors perfmances are given in a csv file with the format:
 	name, mean performance, std dev
 	Alice, 100, 0,
@@ -64,8 +64,6 @@ def read_database(file_name = "file.csv"):
 	with open(file_name) as csvfile:
 		rdr = csv.reader(csvfile)
 		
-		next(rdr, None) # ommiting first line
-
 		for row in rdr:
 			if row:
 				d[row[0]] = float(row[1]), float(row[2]) # assigning tuple to the key
@@ -76,7 +74,7 @@ def read_database(file_name = "file.csv"):
 
 
 def simulate_performance(data_base):
-	"""
+	"""(d)
 	This function takes an OrderedDict of the format returned by your answer to 1c as an argument,
 	generates a random performance value using the normal distribution for each sailor,
 	and returns these in another OrderedDict with names as keys.
@@ -95,7 +93,7 @@ def simulate_performance(data_base):
 	
 
 def position(simulation):
-	"""
+	"""(e)
 	This function takes an OrderedDict of the format returned by your answer to 1d as an argument,
 	and returns a list of each sailor’s position in the race.
 	
